@@ -4,6 +4,17 @@ import json
 
 from predict import HousePricePredictor
 
+
+
+import matplotlib as mpl
+
+# =========================
+# Matplotlib 中文設定
+# =========================
+mpl.rcParams["font.family"] = "Microsoft JhengHei"
+mpl.rcParams["axes.unicode_minus"] = False
+
+
 # =========================
 # 頁面設定
 # =========================
