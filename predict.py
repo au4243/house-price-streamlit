@@ -271,7 +271,7 @@ if __name__ == "__main__":
     print(f"\n已輸出預測結果至：{output_dir}\n")
 
 
-    case1 = {"building_type": "住宅大樓",
+    #case1 =     #case1 = {"building_t
         "main_use": "住家用",
         "building_age": 55,
         "building_area_sqm": 45,
@@ -281,7 +281,7 @@ if __name__ == "__main__":
         "balcony_area": 5,
         "has_parking": 1,
         "has_elevator": 1, "district": "臺北市萬華區" }
-    case2 = {"building_type": "住宅大樓",
+    #case2 =     #case2 = {"building_t
         "main_use": "住家用",
         "building_age": 55,
         "building_area_sqm": 45,
@@ -291,7 +291,7 @@ if __name__ == "__main__":
         "balcony_area": 5,
         "has_parking": 1,
         "has_elevator": 1, "district": "臺北市大安區" }
-    case3 = {"building_type": "住宅大樓",
+    #case3 =     #case3 = {"building_t
         "main_use": "住家用",
         "building_age": 55,
         "building_area_sqm": 45,
@@ -302,6 +302,7 @@ if __name__ == "__main__":
         "has_parking": 1,
         "has_elevator": 1, "district": "臺北市內湖區" }
 
-    print(predictor.predict(case1))
-    print(predictor.predict(case2))
-    print(predictor.predict(case3))
+    #    #print(predictor.predict(ca
+    #    #print(predictor.predict(ca
+    #    #print(predictor.predict(ca
+
