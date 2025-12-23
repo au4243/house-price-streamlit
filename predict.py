@@ -14,21 +14,53 @@ from predict import HousePricePredictor
 =================================
 """
 
-import os
+#import os
 import json
 from datetime import datetime
 
 import joblib
 import pandas as pd
 import shap
-import matplotlib.pyplot as plt
-import matplotlib as mpl
+#import matplotlib.pyplot as plt
+#import matplotlib as mpl
 
 # =========================
 # Matplotlib 中文設定
 # =========================
-mpl.rcParams["font.family"] = "Microsoft JhengHei"
+#mpl.rcParams["font.family"] = "Microsoft JhengHei"
+#mpl.rcParams["axes.unicode_minus"] = False
+
+
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import os
+
+# =========================
+# Matplotlib 中文設定（跨平台）
+# =========================
+FONT_PATH = os.path.join(
+    os.path.dirname(__file__),
+    "fonts",
+    "NotoSansCJKtc-Regular.otf"
+)
+
+if os.path.exists(FONT_PATH):
+    mpl.font_manager.fontManager.addfont(FONT_PATH)
+    font_prop = mpl.font_manager.FontProperties(fname=FONT_PATH)
+    mpl.rcParams["font.family"] = font_prop.get_name()
+else:
+    # fallback：僅 Windows 會用到
+    mpl.rcParams["font.family"] = "Microsoft JhengHei"
+
 mpl.rcParams["axes.unicode_minus"] = False
+
+
+
+
+
+
+
 
 
 class HousePricePredictor:
