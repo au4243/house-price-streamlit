@@ -13,6 +13,11 @@ XGBoost 房價預測最終部署版模組（單檔完整版）
 from predict import HousePricePredictor
 =================================
 """
+
+import os
+import json
+from datetime import datetime
+
 import joblib
 import pandas as pd
 import shap
@@ -22,7 +27,6 @@ import matplotlib as mpl
 # =========================
 # Matplotlib 中文設定
 # =========================
-
 mpl.rcParams["font.family"] = "Microsoft JhengHei"
 mpl.rcParams["axes.unicode_minus"] = False
 
@@ -54,9 +58,7 @@ class HousePricePredictor:
     # --------------------------------------------------
     @staticmethod
     def _pretty_name(col: str, value=None) -> str:
-        """
-        將模型欄位轉為中文可讀名稱
-        """
+        """模型欄位轉為中文可讀名稱"""
         if col.startswith("district_"):
             return f"行政區：{col.replace('district_', '')}"
 
@@ -84,47 +86,43 @@ class HousePricePredictor:
     def _preprocess(self, case_dict: dict) -> pd.DataFrame:
         """
         單筆資料 → 模型可接受格式
-        - 高效補齊缺失欄位
-        - 嚴格依照訓練特徵順序
+        - 嚴格依照訓練特徵
+        - 一次補齊缺失欄位（避免 fragmentation）
         """
         df = pd.DataFrame([case_dict])
 
-        # One-hot encoding
         df = pd.get_dummies(
             df,
             columns=self.categorical_cols,
             drop_first=False,
         )
 
-        # 一次補齊所有缺失欄位（避免 DataFrame fragmentation）
         missing_cols = set(self.model_features) - set(df.columns)
         if missing_cols:
-            missing_df = pd.DataFrame(
-                0,
-                index=df.index,
-                columns=list(missing_cols),
+            df = pd.concat(
+                [
+                    df,
+                    pd.DataFrame(
+                        0,
+                        index=df.index,
+                        columns=list(missing_cols),
+                    ),
+                ],
+                axis=1,
             )
-            df = pd.concat([df, missing_df], axis=1)
 
-        # 依訓練時欄位順序排列
         df = df[self.model_features]
-
         return df
 
     # --------------------------------------------------
     def predict(self, case_dict: dict) -> float:
-        """
-        預測單筆房屋單價（萬 / 坪）
-        """
+        """預測單筆房屋單價（萬 / 坪）"""
         X_case = self._preprocess(case_dict)
-        price = float(self.model.predict(X_case)[0])
-        return price
+        return float(self.model.predict(X_case)[0])
 
     # --------------------------------------------------
     def shap_values(self, case_dict: dict):
-        """
-        回傳單筆 SHAP values 與對應特徵
-        """
+        """回傳單筆 SHAP values 與特徵"""
         X_case = self._preprocess(case_dict)
         shap_values = self.explainer.shap_values(X_case)
         return shap_values, X_case
@@ -135,16 +133,13 @@ class HousePricePredictor:
         case_dict: dict,
         top_n: int = 8,
     ) -> str:
-        """
-        自動產生中文 SHAP 估價說明
-        """
+        """自動產生中文 SHAP 估價說明"""
         shap_values, X_case = self.shap_values(case_dict)
 
         sv = shap_values[0]
         base = float(self.explainer.expected_value)
         pred = base + sv.sum()
 
-        # 依影響力排序
         items = sorted(
             zip(X_case.columns, sv, X_case.iloc[0]),
             key=lambda x: abs(x[1]),
@@ -169,9 +164,7 @@ class HousePricePredictor:
 
     # --------------------------------------------------
     def plot_shap_waterfall(self, case_dict: dict):
-        """
-        繪製單筆 SHAP waterfall plot
-        """
+        """顯示單筆 SHAP waterfall 圖"""
         shap_values, X_case = self.shap_values(case_dict)
 
         shap.waterfall_plot(
@@ -184,9 +177,74 @@ class HousePricePredictor:
             show=True,
         )
 
+    # --------------------------------------------------
+    def export_prediction_bundle(
+        self,
+        case_dict: dict,
+        output_root: str = "output",
+        top_n: int = 8,
+    ) -> str:
+        """
+        匯出完整預測結果包
+        - prediction.json
+        - explanation.txt
+        - shap_waterfall.png
+        """
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_dir = os.path.join(output_root, f"prediction_{timestamp}")
+        os.makedirs(output_dir, exist_ok=True)
+
+        price = self.predict(case_dict)
+        explanation = self.generate_chinese_explanation(case_dict, top_n=top_n)
+
+        with open(
+            os.path.join(output_dir, "prediction.json"),
+            "w",
+            encoding="utf-8",
+        ) as f:
+            json.dump(
+                {
+                    "input": case_dict,
+                    "predicted_price_wan_per_ping": round(price, 2),
+                },
+                f,
+                ensure_ascii=False,
+                indent=2,
+            )
+
+        with open(
+            os.path.join(output_dir, "explanation.txt"),
+            "w",
+            encoding="utf-8",
+        ) as f:
+            f.write(explanation)
+
+        shap_values, X_case = self.shap_values(case_dict)
+
+        plt.figure(figsize=(10, 6))
+        shap.waterfall_plot(
+            shap.Explanation(
+                values=shap_values[0],
+                base_values=float(self.explainer.expected_value),
+                data=X_case.iloc[0],
+                feature_names=X_case.columns,
+            ),
+            show=False,
+        )
+
+        plt.tight_layout()
+        plt.savefig(
+            os.path.join(output_dir, "shap_waterfall.png"),
+            dpi=150,
+            bbox_inches="tight",
+        )
+        plt.close()
+
+        return output_dir
+
 
 # ======================================================
-# CLI / 本地測試入口
+# CLI / 本地測試
 # ======================================================
 if __name__ == "__main__":
 
@@ -206,17 +264,11 @@ if __name__ == "__main__":
         "has_elevator": 1,
     }
 
-    # 預測
-    price = predictor.predict(sample_case)
-    print(f"\n預測單價：約 {price:.2f} 萬 / 坪\n")
+    print(f"\n預測單價：約 {predictor.predict(sample_case):.2f} 萬 / 坪\n")
+    print(predictor.generate_chinese_explanation(sample_case))
 
-    # 中文解釋
-    explanation = predictor.generate_chinese_explanation(sample_case)
-    print(explanation)
-
-    # SHAP 圖
-    predictor.plot_shap_waterfall(sample_case)
-
+    output_dir = predictor.export_prediction_bundle(sample_case)
+    print(f"\n已輸出預測結果至：{output_dir}\n")
 
 
     case1 = {"building_type": "住宅大樓",
