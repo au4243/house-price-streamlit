@@ -4,17 +4,6 @@ import json
 
 from predict import HousePricePredictor
 
-
-
-import matplotlib as mpl
-
-# =========================
-# Matplotlib 中文設定
-# =========================
-mpl.rcParams["font.family"] = "Microsoft JhengHei"
-mpl.rcParams["axes.unicode_minus"] = False
-
-
 # =========================
 # 頁面設定
 # =========================
@@ -445,7 +434,6 @@ CITY_TOWN_MAP = {
     ],
     
 }
-
 # =========================
 # 載入模型（快取）
 # =========================
@@ -559,14 +547,14 @@ if st.button("🚀 開始估價"):
         output_dir = predictor.export_prediction_bundle(case_dict)
 
     # --- 讀取結果 ---
-    with open(os.path.join(output_dir, "summary.json"), encoding="utf-8") as f:
+    with open(os.path.join(output_dir, "prediction.json"), encoding="utf-8") as f:
         summary = json.load(f)
 
-    with open(os.path.join(output_dir, "prediction.txt"), encoding="utf-8") as f:
+    with open(os.path.join(output_dir, "explanation.txt"), encoding="utf-8") as f:
         explanation = f.read()
 
     # ====== 顯示預測價格 ======
-    st.success(f"💰 預測單價：約 **{summary['predicted_price']} 萬 / 坪**")
+    st.success(f"💰 預測單價：約 **{summary['predicted_price_wan_per_ping']} 萬 / 坪**")
 
     # ====== SHAP 圖 ======
     st.subheader("🔍 價格影響因素（SHAP）")
@@ -582,7 +570,7 @@ if st.button("🚀 開始估價"):
     # ====== 下載區 ======
     st.subheader("⬇️ 下載結果")
 
-    with open(os.path.join(output_dir, "prediction.txt"), "rb") as f:
+    with open(os.path.join(output_dir, "explanation.txt"), "rb") as f:
         st.download_button(
             "📄 下載估價說明（TXT）",
             f,
@@ -596,9 +584,10 @@ if st.button("🚀 開始估價"):
             file_name="shap_waterfall.png",
         )
 
-    with open(os.path.join(output_dir, "summary.json"), "rb") as f:
+    with open(os.path.join(output_dir, "prediction.json"), "rb") as f:
         st.download_button(
             "📦 下載 JSON（API 用）",
             f,
-            file_name="summary.json",
+            file_name="prediction.json",
         )
+
