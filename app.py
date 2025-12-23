@@ -584,11 +584,12 @@ if st.button("🚀 開始估價"):
             file_name="shap_waterfall.png",
         )
 
-    #    #with open(os.path.join(output_dir, "prediction.json"), "rb") 
+    with open(os.path.join(output_dir, "prediction.json"), "rb") 
         st.download_button(
             "📦 下載 JSON（API 用）",
             f,
             file_name="prediction.json",
         )
+
 
 
