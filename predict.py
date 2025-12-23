@@ -42,7 +42,7 @@ import os
 FONT_PATH = os.path.join(
     os.path.dirname(__file__),
     "fonts",
-    "NotoSansCJKtc-Regular.otf"
+    "NotoSansCJKtc-Regular.ttf"
 )
 
 if os.path.exists(FONT_PATH):
