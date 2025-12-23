@@ -591,6 +591,3 @@ if st.button("🚀 開始估價"):
             file_name="prediction.json",
         )
 
-
-
-
