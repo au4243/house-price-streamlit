@@ -577,12 +577,12 @@ if st.button("🚀 開始估價"):
             file_name="prediction.txt",
         )
 
-    #with open(os.path.join(output_dir, "shap_waterfall.png"), "rb") as f:
-        #st.download_button(
-            #"🖼️ 下載 SHAP 圖（PNG）",
-            #f,
-            #file_name="shap_waterfall.png",
-        #)
+    with open(os.path.join(output_dir, "shap_waterfall.png"), "rb") as f:
+        st.download_button(
+            "🖼️ 下載 SHAP 圖（PNG）",
+            f,
+            file_name="shap_waterfall.png",
+        )
 
     with open(os.path.join(output_dir, "prediction.json"), "rb") as f:
         st.download_button(
